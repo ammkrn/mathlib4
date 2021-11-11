@@ -5,8 +5,14 @@ Authors: Leonardo de Moura, Jeremy Avigad, Floris van Doorn
 -/
 
 import Mathlib.Tactic.Basic
+import Mathlib.Tactic.Ext
 
-universe u v w
+-- Workaround for not being able to add ext lemmas from other modules.
+@[ext] private def funext' := @funext
+@[ext] private def propext' := @propext
+
+@[ext] protected lemma Unit.ext (x y : Unit) : x = y := Subsingleton.allEq _ _
+@[ext] protected lemma PUnit.ext (x y : Unit) : x = y := Subsingleton.allEq _ _
 
 @[simp] theorem opt_param_eq (α : Sort u) (default : α) : optParam α default = α := optParam_eq α default
 
@@ -301,18 +307,6 @@ lemma forall_not_of_not_exists {p : α → Prop} (hne : ¬∃ x, p x) (x) : ¬p 
 
 /- decidable -/
 
-def Decidable.to_bool (p : Prop) [h : Decidable p] : Bool := @Decidable.decide p h
-
-@[simp] lemma to_bool_true_eq_tt (h : Decidable True) : @Decidable.to_bool True h = true :=
-match h with
-| isFalse hf => False.elim (Iff.mp not_true hf)
-| isTrue _ => rfl
-
-@[simp] lemma to_bool_false_eq_ff (h : Decidable False) : @Decidable.to_bool False h = false :=
-match h with
-| isFalse _ => rfl
-| isTrue ht => False.elim ht
-
 namespace Decidable
   variable {p q : Prop}
 
@@ -528,7 +522,7 @@ lemma let_value_eq {α : Sort u} {β : Sort v} {a₁ a₂ : α} (b : α → β) 
 
 lemma let_value_heq {α : Sort v} {β : α → Sort u} {a₁ a₂ : α} (b : ∀ x : α, β x) :
                     a₁ = a₂ → HEq (let x : α := a₁; b x) (let x : α := a₂; b x) :=
-by intro h; rw [h]; exact HEq.refl _
+by intro h; rw [h]
 
 lemma let_body_eq {α : Sort v} {β : α → Sort u} (a : α) {b₁ b₂ : ∀ x : α, β x} :
                   (∀ x, b₁ x = b₂ x) → (let x : α := a; b₁ x) = (let x : α := a; b₂ x) :=

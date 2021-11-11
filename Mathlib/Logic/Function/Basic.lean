@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Hölzl, Mario Carneiro
 -/
 import Mathlib.Logic.Basic
-import Mathlib.Function
-import Mathlib.Set
-import Mathlib.SetNotation
+import Mathlib.Init.Function
+import Mathlib.Init.Set
+import Mathlib.Init.SetNotation
 
 universe u v w
 
@@ -563,7 +563,7 @@ lemma uncurry_bicompr (f : α → β → γ) (g : γ → δ) :
 
 lemma uncurry_bicompl (f : γ → δ → ε) (g : α → γ) (h : β → δ) :
   uncurry (bicompl f g h) = (uncurry f) ∘ (Prod.map g h) :=
-funext (by intro x; cases x; exact rfl)
+by ext (x, y); exact rfl
 
 end bicomp
 

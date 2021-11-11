@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura
 -/
 import Mathlib.Init.Logic
-import Mathlib.Function
+import Mathlib.Init.Function
 import Mathlib.Tactic.Basic
 
 section needs_better_home
@@ -217,11 +217,14 @@ theorem imp.swap : (a → b → c) ↔ (b → a → c) :=
 theorem imp_not_comm : (a → ¬b) ↔ (b → ¬a) :=
 imp.swap
 
+instance Decidable.predToBool {α : Type u} (p : α → Prop) [DecidablePred p] : CoeDep (α → Prop) p (α → Bool) where
+  coe := fun b => decide $ p b
+
 /-! ### Declarations about `xor` -/
 
-@[simp] theorem xor_true : xor True = Not := funext $ λ a => by simp [xor]
+@[simp] theorem xor_true : xor True = Not := by simp [xor]
 
-@[simp] theorem xor_false : xor False = id := funext $ λ a => by simp [xor]
+@[simp] theorem xor_false : xor False = id := by ext; simp [xor]
 
 theorem xor_comm (a b) : xor a b = xor b a := by simp [xor, and_comm, or_comm]
 

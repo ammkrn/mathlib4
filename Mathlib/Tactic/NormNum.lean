@@ -138,16 +138,20 @@ def evalEq (α a b : Expr) : MetaM Expr := do
 end NormNum
 end Meta
 
-syntax (name := Parser.Tactic.normNum) "normNum" : tactic
+namespace Tactic
 
-open Meta Elab Tactic
+open Lean.Parser.Tactic in
+syntax (name := normNum) "normNum" (" [" simpArg,* "]")? (ppSpace location)? : tactic
 
-@[tactic normNum] def Tactic.evalNormNum : Tactic := fun stx =>
+open Meta Elab.Tactic in
+elab_rules : tactic | `(tactic| normNum) => do
   liftMetaTactic fun g => do
     let some (α, lhs, rhs) ← matchEq? (← getMVarType g) | throwError "fail"
     let p ← NormNum.evalEq α lhs rhs
     assignExprMVar g p
     pure []
+
+end Tactic
 
 end Lean
 
