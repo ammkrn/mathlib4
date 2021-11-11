@@ -235,21 +235,13 @@ myExfalso
 exact f h
 ```
 
-In the above example, we're still using the sugar Lean provides for creating quotations, as it saves us a lot of work. It is possible to forego the sugar altogether.
+In the above example, we're still using the sugar Lean provides for creating quotations, as it saves us some work. It is possible to forego the sugar altogether.
 ```
 syntax (name := myExfalsoParser) "myExfalso" : tactic
 
 @[macro myExfalsoParser] def implMyExfalso : Lean.Macro :=
-fun stx =>
-  do
-    let info ← Lean.MonadRef.mkInfoFromRefPos
-    let scp ← Lean.getCurrMacroScope
-    let mainModule ← Lean.getMainModule
-    pure
-        (Lean.Syntax.node `Lean.Parser.Tactic.apply
-          #[Lean.Syntax.atom info "apply",
-            Lean.Syntax.ident info (String.toSubstring "False.elim") (Lean.addMacroScope mainModule `False.elim scp)
-              [(`False.elim, [])]])
+  fun stx => Lean.mkNode `Lean.Parser.Tactic.apply
+    #[Lean.mkAtomFrom stx "apply", Lean.mkCIdentFrom stx ``False.elim]
 
 example (p : Prop) (h : p) (f : p -> False) : 3 = 2 := by
 myExfalso
