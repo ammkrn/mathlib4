@@ -103,8 +103,6 @@ Lean.ParserDescr.node `Lean.Parser.Term.quot 1024
   (Lean.ParserDescr.binary `andthen (Lean.ParserDescr.symbol "`(binderterm|")
     (Lean.ParserDescr.binary `andthen (Lean.ParserDescr.unary `incQuotDepth (Lean.ParserDescr.cat `binderterm 0))
       (Lean.ParserDescr.symbol ")")))
-
-[Elab.definition.scc] [binderterm.quot]
 -/
 ```
 
@@ -115,6 +113,7 @@ Declaring a new syntax category like this one automatically declares a quotation
 Internally, elements of type `Lean.ParserDescr` are implemented as parser combinators. However, Lean offers the ability to write parsers using the macro/pattern language by way of the `syntax` keyword. This is the recommended means of writing parsers. As an example, the parser for the `rwa` (rewrite, then use assumption) tactic is:
 
 ```
+set_option trace.Elab.definition true in
 syntax "rwa " rwRuleSeq (location)? : tactic
 
 /-
@@ -135,6 +134,7 @@ Literals are written as double-quoted strings (`"rwa "` expects the literal sequ
 The name `tacticRwa__` is automatically generated. You can name parser descriptors declared with the `syntax` keyword like so:
 
 ```
+set_option trace.Elab.definition true in
 syntax (name := introv) "introv " (colGt ident)* : tactic
 
 [Elab.definition.body] introv : Lean.ParserDescr :=
@@ -196,7 +196,7 @@ macro "exfalso" : tactic => `(apply False.elim)
 /-
 Results in the expansion:
 
-[Elab.definition.body] myMacro._@._hyg.320 : Lean.Macro :=
+[Elab.definition.body] _aux___macroRules_tacticExfalso_1 : Lean.Macro :=
 fun x =>
   let discr := x;
   /- This is where Lean tries to actually identify that it's an invocation of the exfalso tactic -/
@@ -209,9 +209,9 @@ fun x =>
       let scp ← Lean.getCurrMacroScope
       let mainModule ← Lean.getMainModule
       pure
-          (Lean.Syntax.node `Lean.Parser.Tactic.seq1
-            #[Lean.Syntax.node `null
-                #[Lean.Syntax.node `Lean.Parser.Tactic.apply
+          (Lean.Syntax.node Lean.SourceInfo.none `Lean.Parser.Tactic.seq1
+            #[Lean.Syntax.node Lean.SourceInfo.none `null
+                #[Lean.Syntax.node Lean.SourceInfo.none `Lean.Parser.Tactic.apply
                     #[Lean.Syntax.atom info "apply",
                       Lean.Syntax.ident info (String.toSubstring "False.elim")
                         (Lean.addMacroScope mainModule `False.elim scp) [(`False.elim, [])]]]])
@@ -235,7 +235,7 @@ myExfalso
 exact f h
 ```
 
-In the above example, we're still using the sugar Lean provides for creating quotations, as it saves us some work. It is possible to forego the sugar altogether.
+In the above example, we're still using the sugar Lean provides for creating quotations, as it feels more intuitive and saves us some work. It is possible to forego the sugar altogether:
 ```
 syntax (name := myExfalsoParser) "myExfalso" : tactic
 
@@ -259,6 +259,8 @@ TODO; for now, see the unexpander in Mathlib.Set for an example.
 # More illustrative examples:
 
 The [Tactic.Basic](https://github.com/leanprover-community/mathlib4/blob/master/Mathlib/Tactic/Basic.lean) file in Mathlib4 contains many good examples to learn from.
+
+The Lean 4 manual has another illustrated example: [Balanced Parentheses as an Embedded Domain Specific Language](https://leanprover.github.io/lean4/doc/metaprogramming.html)
 
 # Practical tips:
 
