@@ -91,25 +91,6 @@ local macro "genIntDeclars" typeName:ident : command => do
     instance : CommMonoid $typeName where
       mul_comm := mul_comm
 
-    lemma val_zero : (0 : $typeName).val = (0 : Fin size) := by
-      delta OfNat.ofNat
-      delta $deltaName
-      simp only [ofNat, instOfNat, Zero.zero]
-
-    lemma mk_zero_eq_zero : (mk (0 : Fin size)) = (0 : $typeName) := by
-     delta OfNat.ofNat
-     delta $deltaName
-     simp only [ofNat, instOfNat, Zero.zero]
-
-    instance : MonoidWithZero $typeName :=
-      let zero_mul_ : ∀ (a : $typeName), 0 * a = 0 := fun a => by
-        have h0 : (0 : $typeName).val * a.val = (0 : Fin size) := MonoidWithZero.zero_mul a.val
-        simp only [mul_def, h0, mk_zero_eq_zero]
-      {
-        zero_mul := zero_mul_
-        mul_zero := by intro a; rw [mul_comm]; exact zero_mul_ a
-      }
-
       def addOverflows? (a b : $typeName) : Bool := size <= a.toNat + b.toNat
 
       def mulOverflows? (a b : $typeName) : Bool := size <= a.toNat * b.toNat
@@ -173,6 +154,37 @@ genIntDeclars UInt16
 genIntDeclars UInt32
 genIntDeclars UInt64
 genIntDeclars USize
+
+/- This one works, but only when `h0` is extracted -/
+lemma UInt8.zero_mul (a : UInt8) : 0 * a = 0 := by
+    simp only [mul_def]
+    have h0 : (0 : UInt8).val * a.val = (0 : Fin UInt8.size) := MonoidWithZero.zero_mul a.val
+    simp only [h0]
+
+/- Doesn't work; if you make the instances from `ofNat_class` `(priority := high)`, then
+the instances of `OfNat` do change, but simp still doesn't work -/
+lemma USize.zero_mul (a : USize) : 0 * a = 0 := by
+    -- For reference, `(0 : UInt).val = (0 : Fin USize.size) := rfl` works
+    simp only [mul_def]
+    have h0 : (0 : USize).val * a.val = (0 : Fin USize.size) := MonoidWithZero.zero_mul a.val
+    simp only [h0]
+    have h_by_rfl : (0 : USize).val * a.val = (0 : Fin USize.size) * a.val := rfl
+    simp only [h_by_rfl] at h0
+    simp only [h0]
+    simp only [MonoidWithZero.zero_mul a.val]
+    sorry
+
+/- Doesn't work by inlining -/
+lemma UInt8.zero_mul' (a : UInt8) : 0 * a = 0 := by
+    simp only [mul_def]
+    simp only [MonoidWithZero.zero_mul]
+    sorry
+
+/- Doesn't work by inlining with a type annotation -/
+lemma UInt8.zero_mul'' (a : UInt8) : 0 * a = 0 := by
+    simp only [mul_def, (MonoidWithZero.zero_mul a.val : (0 : UInt8).val * a.val = (0 : Fin UInt8.size))]
+    sorry
+
 
 namespace UInt8
 
